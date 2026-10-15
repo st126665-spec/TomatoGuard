@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TomatoGuard - Environmental Monitoring</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:#0f1720; color:#e6edf3; padding:16px; }
+    header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #223; }
+    header h1 { font-size:20px; font-weight:600; }
+    header .sub { font-size:12px; color:#8b98a5; margin-top:2px; }
+    .clock { font-size:13px; color:#58a6ff; font-variant-numeric:tabular-nums; }
+    .panel { background:#161f2b; border:1px solid #223; border-radius:10px; padding:16px; max-width:1100px; margin:0 auto; }
+    .panel h2 { font-size:14px; font-weight:600; margin-bottom:12px; color:#b8c4d0; text-transform:uppercase; letter-spacing:.5px; }
+    .status-banner { padding:12px 16px; border-radius:8px; margin-bottom:14px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+    .status-NORMAL   { background:#14301c; color:#4ade80; border:1px solid #1a5c2e; }
+    .status-AT_RISK  { background:#3a2c10; color:#fbbf24; border:1px solid #6b4f1a; }
+    .status-CRITICAL { background:#3a1518; color:#f87171; border:1px solid #6b2229; }
+    .status-banner .risk { font-size:12px; font-weight:400; }
+    .sensors { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
+    @media(max-width:760px){ .sensors{ grid-template-columns:1fr 1fr; } }
+    .scard { background:#0f1720; border-radius:8px; padding:14px; border:1px solid #223; }
+    .scard .label { font-size:11px; color:#8b98a5; text-transform:uppercase; }
+    .scard .value { font-size:26px; font-weight:600; margin-top:4px; }
+    .scard .unit  { font-size:13px; color:#8b98a5; font-weight:400; }
+    .scard .range { font-size:10px; color:#5a6b80; margin-top:4px; }
+    canvas { max-height:260px; }
+    .offline { text-align:center; color:#8b98a5; font-size:12px; padding:8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>TomatoGuard &mdash; Environmental Monitoring</h1>
+      <div class="sub">Live ESP32 field node &middot; disease-risk early warning</div>
+    </div>
+    <div class="clock" id="clock">waiting for data&hellip;</div>
+  </header>
+
+  <div class="panel">
+    <div class="status-banner status-NORMAL" id="statusBanner">
+      <span id="statusText">&mdash;</span>
+      <span class="risk" id="riskText"></span>
+    </div>
+
+    <div class="sensors">
+      <div class="scard"><div class="label">Temperature</div>
+        <div class="value"><span id="temp">--</span><span class="unit"> &deg;C</span></div>
+        <div class="range">optimal 22&ndash;28</div></div>
+      <div class="scard"><div class="label">Humidity</div>
+        <div class="value"><span id="hum">--</span><span class="unit"> %</span></div>
+        <div class="range">optimal 40&ndash;85</div></div>
+      <div class="scard"><div class="label">Soil Moisture</div>
+        <div class="value"><span id="soil">--</span><span class="unit"> %</span></div>
+        <div class="range">optimal 45&ndash;55</div></div>
+      <div class="scard"><div class="label">Light</div>
+        <div class="value"><span id="light">--</span><span class="unit"> lux</span></div>
+        <div class="range">optimal 8k&ndash;70k</div></div>
+    </div>
+
+    <canvas id="sensorChart"></canvas>
+    <div class="offline" id="offline"></div>
+  </div>
+
+  <script>
+    // dashed threshold reference lines (paper Table 3 alert bounds)
+    const TH = { temp:[15,32], hum:[85], soil:[35,75] };
+    function lines(vals){ return { id:"th", afterDraw(ch){
+      const {ctx, chartArea:a, scales:{y}} = ch; ctx.save();
+      ctx.strokeStyle="#6b2229"; ctx.setLineDash([5,4]);
+      vals.forEach(v=>{ const yy=y.getPixelForValue(v);
+        ctx.beginPath(); ctx.moveTo(a.left,yy); ctx.lineTo(a.right,yy); ctx.stroke(); });
+      ctx.restore(); } }; }
+
+    const chart = new Chart(document.getElementById("sensorChart"), {
+      type:"line",
+      data:{ labels:[], datasets:[
+        {label:"Temp (°C)", data:[], borderColor:"#f87171", borderWidth:1.5, pointRadius:0, tension:.3},
+        {label:"Humidity (%)", data:[], borderColor:"#58a6ff", borderWidth:1.5, pointRadius:0, tension:.3},
+        {label:"Soil (%)", data:[], borderColor:"#c084fc", borderWidth:1.5, pointRadius:0, tension:.3},
+      ]},
+      options:{ animation:false,
+        scales:{ x:{ticks:{color:"#8b98a5",maxTicksLimit:6,font:{size:9}},grid:{color:"#1a2635"}},
+                 y:{ticks:{color:"#8b98a5",font:{size:10}},grid:{color:"#1a2635"}} },
+        plugins:{ legend:{labels:{color:"#b8c4d0",font:{size:11},boxWidth:12}} } },
+      plugins:[ lines(TH.temp) ]
+    });
+
+    async function tick(){
+      try {
+        const r = await (await fetch("/api/latest")).json();
+        if (!r.status){ document.getElementById("offline").textContent =
+            "No readings yet. Is the ESP32 (or the test publisher) running?"; return; }
+        document.getElementById("offline").textContent = "";
+        document.getElementById("temp").textContent  = (+r.temperature).toFixed(1);
+        document.getElementById("hum").textContent   = (+r.humidity).toFixed(0);
+        document.getElementById("soil").textContent  = (+r.soil_moisture).toFixed(0);
+        document.getElementById("light").textContent = (+r.light).toFixed(0);
+        document.getElementById("clock").textContent = r.timestamp + " · " + (r.device||"");
+
+        const b = document.getElementById("statusBanner");
+        b.className = "status-banner status-" + r.status;
+        document.getElementById("statusText").textContent = r.status;
+        document.getElementById("riskText").textContent =
+          (r.disease_risk && r.disease_risk!=="None") ? r.disease_risk : "No disease risk";
+
+        const w = await (await fetch("/api/series")).json();
+        chart.data.labels = w.labels;
+        chart.data.datasets[0].data = w.temperature;
+        chart.data.datasets[1].data = w.humidity;
+        chart.data.datasets[2].data = w.soil_moisture;
+        chart.update();
+      } catch(e){ console.error(e); }
+    }
+    tick(); setInterval(tick, 3000);
+  </script>
+</body>
+</html>
