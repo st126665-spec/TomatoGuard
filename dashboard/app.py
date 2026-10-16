@@ -116,6 +116,10 @@ def api_series():
         "humidity":      [r["humidity"]       for r in rows],
         "soil_moisture": [r["soil_moisture"]  for r in rows],
         "light":         [r["light"]          for r in rows],
+        # used by the dashboard's status-change log and CSV export
+        "timestamps":    [r["timestamp"]                for r in rows],
+        "status":        [r.get("status", "")           for r in rows],
+        "disease_risk":  [r.get("disease_risk", "None") for r in rows],
     })
 
 if __name__ == "__main__":
