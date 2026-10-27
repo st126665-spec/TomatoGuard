@@ -24,7 +24,7 @@
 #include <PubSubClient.h>
 
 // ---------- EDIT THESE ----------
-const char *WIFI_SSID = "WIoT_24G_1";
+const char *WIFI_SSID = "WTIoT_24G_1";
 const char *WIFI_PASS = "tcictait";
 const char *MQTT_HOST = "192.168.1.104"; // Raspberry Pi IP
 const int MQTT_PORT = 1883;
@@ -40,6 +40,9 @@ const char *DEVICE_ID = "esp32_plot01";
 const bool PUBLISH_ALL = false;            // true = baseline (every reading)
 const unsigned long READ_INTERVAL = 5000;  // sample every 5 s
 const unsigned long HEARTBEAT_MS = 300000; // 5 min heartbeat in edge mode
+const unsigned long WIFI_CONNECT_TIMEOUT = 20000;
+const unsigned long WIFI_RETRY_INTERVAL = 10000;
+const unsigned long MQTT_RETRY_INTERVAL = 5000;
 
 // ---------- Pins ----------
 #define DHTPIN 15
@@ -70,6 +73,10 @@ bool ledState = false, lcdScreenA = true;
 char topicStatus[160];
 String lastStatusPublished = "";
 unsigned long msgCount = 0;
+bool wifiAttemptActive = false;
+bool wifiWasConnected = false;
+unsigned long wifiAttemptStarted = 0;
+unsigned long lastMqttAttempt = 0;
 
 float gTemp = 0, gHum = 0, gSoil = 0, gLight = 0;
 String gStatus = "STARTING", gRiskShort = "", gRiskFull = "None";
@@ -207,35 +214,75 @@ void updateDisplay()
     lcdScreenA = !lcdScreenA;
 }
 
-void connectWiFi()
+void startWiFiConnection()
 {
-    WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASS);
-    unsigned long t0 = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000)
-    {
-        delay(400);
-        Serial.print(".");
-    }
-    Serial.println(WiFi.status() == WL_CONNECTED ? "\nWiFi OK" : "\nWiFi down");
+    wifiAttemptStarted = millis();
+    wifiAttemptActive = true;
+    Serial.println("Connecting to WiFi...");
 }
+
+bool maintainWiFi()
+{
+    unsigned long now = millis();
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        wifiAttemptActive = false;
+        if (!wifiWasConnected)
+        {
+            Serial.println("WiFi OK");
+            Serial.print("WiFi IP: ");
+            Serial.println(WiFi.localIP());
+            Serial.print("WiFi RSSI: ");
+            Serial.println(WiFi.RSSI());
+        }
+        wifiWasConnected = true;
+        return true;
+    }
+
+    if (wifiWasConnected)
+    {
+        Serial.printf("WiFi lost; status=%d\n", WiFi.status());
+        mqtt.disconnect();
+        wifiWasConnected = false;
+    }
+
+    if (wifiAttemptActive)
+    {
+        if (now - wifiAttemptStarted < WIFI_CONNECT_TIMEOUT)
+            return false;
+
+        Serial.printf("WiFi connection timed out; status=%d\n", WiFi.status());
+        WiFi.disconnect(false, false);
+        wifiAttemptActive = false;
+        wifiAttemptStarted = now;
+        return false;
+    }
+
+    if (now - wifiAttemptStarted >= WIFI_RETRY_INTERVAL)
+        startWiFiConnection();
+
+    return false;
+}
+
 void connectMqtt()
 {
-    mqtt.setServer(MQTT_HOST, MQTT_PORT);
-    int tries = 0;
-    while (!mqtt.connected() && tries++ < 3)
+    unsigned long now = millis();
+    if (WiFi.status() != WL_CONNECTED || mqtt.connected())
+        return;
+    if (now - lastMqttAttempt < MQTT_RETRY_INTERVAL)
+        return;
+
+    lastMqttAttempt = now;
+    // Anonymous broker: connect with just the client id, no credentials.
+    if (mqtt.connect(DEVICE_ID))
     {
-        // anonymous broker: connect with just the client id, no credentials
-        if (mqtt.connect(DEVICE_ID))
-        {
-            Serial.println("MQTT connected");
-            flushBuffer();
-        }
-        else
-        {
-            Serial.printf("MQTT fail rc=%d\n", mqtt.state());
-            delay(2000);
-        }
+        Serial.println("MQTT connected");
+        flushBuffer();
+    }
+    else
+    {
+        Serial.printf("MQTT fail rc=%d\n", mqtt.state());
     }
 }
 
@@ -249,8 +296,9 @@ void setup()
     lcd.backlight();
     snprintf(topicStatus, sizeof(topicStatus), "agri/%s/%s/%s/status", REGION, USER_ID, DEVICE_ID);
     Serial.printf("Topic: %s  mode: %s\n", topicStatus, PUBLISH_ALL ? "PUBLISH_ALL(baseline)" : "on-change+heartbeat(edge)");
-    connectWiFi();
-    connectMqtt();
+    WiFi.mode(WIFI_STA);
+    mqtt.setServer(MQTT_HOST, MQTT_PORT);
+    startWiFiConnection();
 }
 
 void readAndEvaluateSensors()
@@ -303,11 +351,11 @@ void readAndEvaluateSensors()
 void loop()
 {
     unsigned long now = millis();
-    if (WiFi.status() != WL_CONNECTED)
-        connectWiFi();
-    if (!mqtt.connected())
+    bool wifiConnected = maintainWiFi();
+    if (wifiConnected && !mqtt.connected())
         connectMqtt();
-    mqtt.loop();
+    if (wifiConnected && mqtt.connected())
+        mqtt.loop();
     if (now - lastRead >= READ_INTERVAL)
     {
         lastRead = now;
