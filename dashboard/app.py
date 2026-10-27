@@ -22,7 +22,7 @@ import paho.mqtt.client as mqtt
 # ----------------------------- CONFIG -------------------------------------
 MQTT_HOST   = os.getenv("MQTT_HOST", "localhost")   # Mosquitto runs on this Pi
 MQTT_PORT   = int(os.getenv("MQTT_PORT", "1883"))
-MQTT_TOPIC  = os.getenv("MQTT_TOPIC", "tomatoguard/+/reading")
+MQTT_TOPIC  = os.getenv("MQTT_TOPIC", "agri/+/+/+/status")
 
 # InfluxDB 2.x (leave INFLUX_TOKEN empty to disable Influx writes for now)
 INFLUX_URL    = os.getenv("INFLUX_URL", "http://localhost:8086")
