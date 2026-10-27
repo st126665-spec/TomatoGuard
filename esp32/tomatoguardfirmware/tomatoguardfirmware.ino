@@ -1,26 +1,17 @@
 /*
  * ============================================================
- * TomatoGuard - ESP32 Sensor Node v2 (edge publishing + buffering)
+ * TomatoGuard - ESP32 Sensor Node v2 (anonymous MQTT - no auth)
  * ------------------------------------------------------------
- * Same sensors/logic/LCD as before, PLUS the edge features the
- * paper's Objective 2 needs:
- *   - PUBLISH_ALL flag:
- *        true  = publish EVERY reading   (cloud-only baseline)
- *        false = publish ON STATUS CHANGE + heartbeat every 5 min (edge mode)
- *   - offline RAM buffer: readings taken while MQTT is down are
- *           queued and re-sent on reconnect (no data lost in a short outage)
- *   - topic hierarchy: agri/<region>/<user>/<device>/status
- *   - prints a running published-message count to Serial for the benchmark
+ * Edge features: PUBLISH_ALL flag, on-change + heartbeat publishing,
+ * offline RAM buffer, topic hierarchy agri/<region>/<user>/<device>/status.
  *
- * HOW TO GET THE COMPARISON NUMBER (objective 2, >=30% fewer msgs):
- *   1) flash with PUBLISH_ALL = true,  run ~30 min, note msgs at the broker
- *   2) flash with PUBLISH_ALL = false, run the SAME ~30 min, note msgs
- *   reduction % = (baseline - edge) / baseline * 100
- * Report the measured number. Do not assume it.
+ * NOTE: broker is anonymous for now, so there is NO MQTT username/password.
+ * When you enable broker auth later (for the paper's security section),
+ * add MQTT_USER/MQTT_PASS back and use mqtt.connect(DEVICE_ID, MQTT_USER, MQTT_PASS).
  *
- * IMPORTANT: the offline buffer must be TESTED before you claim it:
- *   unplug the Pi/broker for ~1 min, keep the node running, restore it,
- *   and confirm the queued readings arrive. Only then write it into the paper.
+ * STILL TO SET before this connects:
+ *   - WIFI_SSID / WIFI_PASS : a network the ESP32 can actually join
+ *   - MQTT_HOST             : the Pi's current IP on that same network
  *
  * LIBRARIES: DHT sensor library, LiquidCrystal_I2C, PubSubClient, ArduinoJson
  * ============================================================
@@ -35,7 +26,7 @@
 // ---------- EDIT THESE ----------
 const char *WIFI_SSID = "WIoT_24G_1";
 const char *WIFI_PASS = "tcictait";
-const char *MQTT_HOST = "192.168.1.105"; // Raspberry Pi IP
+const char *MQTT_HOST = "192.168.1.104"; // Raspberry Pi IP
 const int MQTT_PORT = 1883;
 
 // ---- identity -> topic hierarchy agri/<region>/<user>/<device>/status ----
@@ -43,9 +34,7 @@ const char *REGION = "th-pathumthani";
 const char *USER_ID = "user_st126665";
 const char *DEVICE_ID = "esp32_plot01";
 
-// ---- MQTT auth (set after you enable passwords on the broker; see security/) ----
-const char *MQTT_USER = "esp32_plot01";
-const char *MQTT_PASS = "CHANGE_ME_DEVICE_PASSWORD";
+// ---- MQTT: broker is anonymous for now, no username/password needed ----
 
 // ---- PUBLISH MODE ----
 const bool PUBLISH_ALL = false;            // true = baseline (every reading)
@@ -236,8 +225,8 @@ void connectMqtt()
     int tries = 0;
     while (!mqtt.connected() && tries++ < 3)
     {
-        // if you have NOT enabled broker passwords yet, use: mqtt.connect(DEVICE_ID)
-        if (mqtt.connect(DEVICE_ID, MQTT_USER, MQTT_PASS))
+        // anonymous broker: connect with just the client id, no credentials
+        if (mqtt.connect(DEVICE_ID))
         {
             Serial.println("MQTT connected");
             flushBuffer();
