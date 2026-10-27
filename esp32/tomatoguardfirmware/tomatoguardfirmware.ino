@@ -63,8 +63,8 @@ const float SOIL_ALERT_LOW = 35.0, SOIL_ALERT_HIGH = 75.0;
 const float LIGHT_ALERT_LOW = 5000.0;
 
 // ---------- soil calibration ----------
-const bool USE_CALIBRATION = false; // true on the real capacitive sensor
-int SOIL_RAW_AIR = 3200, SOIL_RAW_WATER = 1300;
+const bool USE_CALIBRATION = true; // true on the real capacitive sensor
+int SOIL_RAW_AIR = 3616, SOIL_RAW_WATER = 254;
 
 // ---------- timing / state ----------
 const unsigned long LCD_INTERVAL = 2500, LED_INTERVAL = 500;
