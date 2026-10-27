@@ -77,7 +77,7 @@ def on_message(c, u, msg):
         r = json.loads(msg.payload.decode())
     except Exception as e:
         print(f"[mqtt] bad payload: {e}"); return
-    r["timestamp"] = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    r["timestamp"] = dt.datetime.now(dt.timezone(dt.timedelta(hours=7))).strftime("%Y-%m-%d %H:%M:%S")
     with lock:
         buffer.append(r)
         latest.clear(); latest.update(r)
