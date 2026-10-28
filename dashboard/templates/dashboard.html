@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TomatoGuard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&display=swap"
+    rel="stylesheet">
+  <script src="/static/chart.umd.min.js"></script>
   <style>
     /* ------------------------------------------------------------------
        Tokens. Status colours carry meaning everywhere (gauges, chart
@@ -32,6 +34,7 @@
       font-family: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
       color-scheme: light;
     }
+
     @media (prefers-color-scheme: dark) {
       :root {
         --paper: #121814;
@@ -51,478 +54,912 @@
       }
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--paper); color: var(--ink); font-size: 16px; line-height: 1.5; }
-    button { font: inherit; color: inherit; cursor: pointer; }
-    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
-    .num { font-variant-numeric: tabular-nums lining-nums; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    .page { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 20px; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+      display: grid;
+      gap: 20px;
+    }
 
     /* ------------------------------------------------------------ top bar */
-    .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-    .brand { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.01em; margin-right: auto; display: flex; align-items: center; gap: 10px; }
-    .brand svg { flex: none; }
-    .live { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
-    .live .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
-    .live.on .dot { background: var(--leaf); box-shadow: 0 0 0 4px var(--leaf-soft); }
-    .live.off .dot { background: var(--tomato); }
-    .live strong { color: var(--ink); font-weight: 700; }
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 16px;
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand svg {
+      flex: none;
+    }
+
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .live .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .live.on .dot {
+      background: var(--leaf);
+      box-shadow: 0 0 0 4px var(--leaf-soft);
+    }
+
+    .live.off .dot {
+      background: var(--tomato);
+    }
+
+    .live strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
 
     /* -------------------------------------------------------- verdict hero */
-    .overview { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: stretch; }
-    @media (max-width: 880px) { .overview { grid-template-columns: 1fr; } }
+    .overview {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 880px) {
+      .overview {
+        grid-template-columns: 1fr;
+      }
+    }
 
     .verdict {
-      border-radius: var(--radius-l); padding: 28px 28px 24px;
-      background: var(--surface); border: 1px solid var(--line);
-      display: flex; flex-direction: column; gap: 14px;
+      border-radius: var(--radius-l);
+      padding: 28px 28px 24px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
       transition: background-color .6s ease, border-color .6s ease;
     }
-    .verdict[data-status="NORMAL"]   { background: var(--leaf-soft);   border-color: transparent; }
-    .verdict[data-status="AT_RISK"]  { background: var(--amber-soft);  border-color: transparent; }
-    .verdict[data-status="CRITICAL"] { background: var(--tomato-soft); border-color: transparent; }
-    .verdict-word { font-size: clamp(2.6rem, 6vw, 4rem); font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
-    .verdict[data-status="NORMAL"]   .verdict-word { color: var(--leaf); }
-    .verdict[data-status="AT_RISK"]  .verdict-word { color: var(--amber); }
-    .verdict[data-status="CRITICAL"] .verdict-word { color: var(--tomato); }
-    .verdict-since { margin-top: 6px; font-size: 0.95rem; color: var(--muted); }
-    .verdict-risk { font-size: 1.35rem; font-weight: 700; line-height: 1.25; }
-    .verdict-why { color: var(--ink); max-width: 46ch; }
-    .verdict-why p + p { margin-top: 6px; }
-    .verdict-action { margin-top: auto; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); font-size: 0.95rem; color: var(--muted); max-width: 52ch; }
-    .verdict-action strong { color: var(--ink); }
+
+    .verdict[data-status="NORMAL"] {
+      background: var(--leaf-soft);
+      border-color: transparent;
+    }
+
+    .verdict[data-status="AT_RISK"] {
+      background: var(--amber-soft);
+      border-color: transparent;
+    }
+
+    .verdict[data-status="CRITICAL"] {
+      background: var(--tomato-soft);
+      border-color: transparent;
+    }
+
+    .verdict-word {
+      font-size: clamp(2.6rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .verdict[data-status="NORMAL"] .verdict-word {
+      color: var(--leaf);
+    }
+
+    .verdict[data-status="AT_RISK"] .verdict-word {
+      color: var(--amber);
+    }
+
+    .verdict[data-status="CRITICAL"] .verdict-word {
+      color: var(--tomato);
+    }
+
+    .verdict-since {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .verdict-risk {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .verdict-why {
+      color: var(--ink);
+      max-width: 46ch;
+    }
+
+    .verdict-why p+p {
+      margin-top: 6px;
+    }
+
+    .verdict-action {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 52ch;
+    }
+
+    .verdict-action strong {
+      color: var(--ink);
+    }
 
     /* ----------------------------------------------------- range gauges */
-    .gauges { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); padding: 8px 24px; }
-    .gauge { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line); }
-    .gauge:last-child { border-bottom: 0; }
-    .gauge-name { grid-row: 1 / span 2; align-self: center; }
-    .gauge-name .label { font-weight: 700; }
-    .gauge-name .value { font-size: 1.9rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-    .gauge-name .unit { font-size: 0.95rem; font-weight: 500; color: var(--muted); margin-left: 3px; }
-    .gauge-state { font-size: 0.85rem; font-weight: 700; }
-    .gauge-state[data-s="ok"] { color: var(--leaf); }
-    .gauge-state[data-s="alert"] { color: var(--amber); }
-    .gauge-state[data-s="crit"] { color: var(--tomato); }
-    .gauge-state[data-s="night"], .gauge-state[data-s="none"] { color: var(--muted); }
+    .gauges {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-l);
+      padding: 8px 24px;
+    }
 
-    .track { position: relative; height: 34px; align-self: end; }
-    .zones { position: absolute; inset: 12px 0 auto 0; height: 10px; border-radius: 5px; overflow: hidden; display: flex; }
-    .zones span { height: 100%; }
-    .z-ok { background: color-mix(in srgb, var(--leaf) 22%, var(--surface)); }
-    .z-opt { background: var(--optimal); }
-    .z-alert { background: color-mix(in srgb, var(--amber) 45%, var(--surface)); }
-    .z-crit { background: color-mix(in srgb, var(--tomato) 55%, var(--surface)); }
-    .marker { position: absolute; top: 2px; width: 4px; height: 30px; margin-left: -2px; border-radius: 2px; background: var(--ink); transition: left .5s ease; }
-    .marker::after { content: ""; position: absolute; left: -5px; top: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); border: 3px solid var(--surface); }
-    .ticks { position: relative; height: 18px; font-size: 0.75rem; color: var(--muted); }
-    .ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+    .gauge {
+      display: grid;
+      grid-template-columns: 9.5rem minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 20px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .gauge:last-child {
+      border-bottom: 0;
+    }
+
+    .gauge-name {
+      grid-row: 1 / span 2;
+      align-self: center;
+    }
+
+    .gauge-name .label {
+      font-weight: 700;
+    }
+
+    .gauge-name .value {
+      font-size: 1.9rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .gauge-name .unit {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-left: 3px;
+    }
+
+    .gauge-state {
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .gauge-state[data-s="ok"] {
+      color: var(--leaf);
+    }
+
+    .gauge-state[data-s="alert"] {
+      color: var(--amber);
+    }
+
+    .gauge-state[data-s="crit"] {
+      color: var(--tomato);
+    }
+
+    .gauge-state[data-s="night"],
+    .gauge-state[data-s="none"] {
+      color: var(--muted);
+    }
+
+    .track {
+      position: relative;
+      height: 34px;
+      align-self: end;
+    }
+
+    .zones {
+      position: absolute;
+      inset: 12px 0 auto 0;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .zones span {
+      height: 100%;
+    }
+
+    .z-ok {
+      background: color-mix(in srgb, var(--leaf) 22%, var(--surface));
+    }
+
+    .z-opt {
+      background: var(--optimal);
+    }
+
+    .z-alert {
+      background: color-mix(in srgb, var(--amber) 45%, var(--surface));
+    }
+
+    .z-crit {
+      background: color-mix(in srgb, var(--tomato) 55%, var(--surface));
+    }
+
+    .marker {
+      position: absolute;
+      top: 2px;
+      width: 4px;
+      height: 30px;
+      margin-left: -2px;
+      border-radius: 2px;
+      background: var(--ink);
+      transition: left .5s ease;
+    }
+
+    .marker::after {
+      content: "";
+      position: absolute;
+      left: -5px;
+      top: -2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: 3px solid var(--surface);
+    }
+
+    .ticks {
+      position: relative;
+      height: 18px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .ticks span {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
     @media (max-width: 520px) {
-      .gauge { grid-template-columns: 1fr; }
-      .gauge-name { grid-row: auto; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+      .gauge {
+        grid-template-columns: 1fr;
+      }
+
+      .gauge-name {
+        grid-row: auto;
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
     }
 
     /* ------------------------------------------------------- panels */
-    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); padding: 20px 24px; }
-    .panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-    .panel-head h2 { font-size: 1.1rem; font-weight: 800; }
-    .panel-head p { color: var(--muted); font-size: 0.9rem; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-l);
+      padding: 20px 24px;
+    }
 
-    .tabs { display: inline-flex; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
-    .tabs button { border: 0; background: transparent; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.9rem; color: var(--muted); }
-    .tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
-    .chart-wrap { position: relative; height: 300px; }
-    .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
-    .legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+    .panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
 
-    .ghost { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-s); padding: 7px 14px; font-weight: 700; font-size: 0.9rem; }
-    .ghost:hover { border-color: var(--muted); }
+    .panel-head h2 {
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
 
-    .log { list-style: none; display: grid; }
-    .log li { display: grid; grid-template-columns: 9.5rem 7.5rem minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
-    .log li:last-child { border-bottom: 0; }
-    .log time { color: var(--muted); font-size: 0.9rem; }
-    .pill { justify-self: start; border-radius: 999px; padding: 2px 10px; font-size: 0.8rem; font-weight: 800; }
-    .pill.NORMAL { background: var(--leaf-soft); color: var(--leaf); }
-    .pill.AT_RISK { background: var(--amber-soft); color: var(--amber); }
-    .pill.CRITICAL { background: var(--tomato-soft); color: var(--tomato); }
-    .log .empty { display: block; color: var(--muted); }
-    @media (max-width: 520px) { .log li { grid-template-columns: 1fr auto; } .log li .what { grid-column: 1 / -1; } }
+    .panel-head p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
 
-    .notice { border-radius: var(--radius-s); padding: 12px 16px; background: var(--amber-soft); color: var(--ink); }
-    .notice[hidden] { display: none; }
-    .foot { color: var(--muted); font-size: 0.85rem; }
+    .tabs {
+      display: inline-flex;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px;
+    }
 
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    .tabs button {
+      border: 0;
+      background: transparent;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .tabs button[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 300px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 14px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 6px;
+      vertical-align: -1px;
+    }
+
+    .ghost {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: var(--radius-s);
+      padding: 7px 14px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .ghost:hover {
+      border-color: var(--muted);
+    }
+
+    .log {
+      list-style: none;
+      display: grid;
+    }
+
+    .log li {
+      display: grid;
+      grid-template-columns: 9.5rem 7.5rem minmax(0, 1fr);
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      align-items: baseline;
+    }
+
+    .log li:last-child {
+      border-bottom: 0;
+    }
+
+    .log time {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .pill {
+      justify-self: start;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .pill.NORMAL {
+      background: var(--leaf-soft);
+      color: var(--leaf);
+    }
+
+    .pill.AT_RISK {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .pill.CRITICAL {
+      background: var(--tomato-soft);
+      color: var(--tomato);
+    }
+
+    .log .empty {
+      display: block;
+      color: var(--muted);
+    }
+
+    @media (max-width: 520px) {
+      .log li {
+        grid-template-columns: 1fr auto;
+      }
+
+      .log li .what {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .notice {
+      border-radius: var(--radius-s);
+      padding: 12px 16px;
+      background: var(--amber-soft);
+      color: var(--ink);
+    }
+
+    .notice[hidden] {
+      display: none;
+    }
+
+    .foot {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+      }
+    }
   </style>
 </head>
+
 <body>
-<div class="page">
+  <div class="page">
 
-  <header class="topbar">
-    <div class="brand">
-      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-        <circle cx="14" cy="16" r="10" fill="var(--tomato)"/>
-        <path d="M14 6c-2-3-5-3-7-2 2 1 3 3 3 4M14 6c2-3 5-3 7-2-2 1-3 3-3 4M14 6v-3" stroke="var(--leaf)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-      </svg>
-      TomatoGuard
-    </div>
-    <div class="live" id="live" role="status"><span class="dot"></span><span id="liveText">Connecting to the node…</span></div>
-  </header>
-
-  <div class="notice" id="notice" hidden></div>
-
-  <section class="overview" aria-label="Current conditions">
-    <article class="verdict" id="verdict" data-status="">
-      <div><div class="verdict-word" id="verdictWord">Waiting</div><div class="verdict-since num" id="verdictSince"></div></div>
-      <div class="verdict-risk" id="verdictRisk">No reading yet</div>
-      <div class="verdict-why" id="verdictWhy"><p>The first reading appears here as soon as the field node publishes.</p></div>
-      <div class="verdict-action" id="verdictAction"></div>
-    </article>
-
-    <div class="gauges" id="gauges" aria-label="Readings against disease thresholds"></div>
-  </section>
-
-  <section class="panel" aria-labelledby="trendTitle">
-    <div class="panel-head">
-      <div>
-        <h2 id="trendTitle">Recent trend</h2>
-        <p id="trendNote">Shaded bands are the alert and critical zones.</p>
+    <header class="topbar">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+          <circle cx="14" cy="16" r="10" fill="var(--tomato)" />
+          <path d="M14 6c-2-3-5-3-7-2 2 1 3 3 3 4M14 6c2-3 5-3 7-2-2 1-3 3-3 4M14 6v-3" stroke="var(--leaf)"
+            stroke-width="2.4" fill="none" stroke-linecap="round" />
+        </svg>
+        TomatoGuard
       </div>
-      <div class="tabs" role="tablist" id="tabs" aria-label="Parameter"></div>
-    </div>
-    <div class="chart-wrap"><canvas id="chart" aria-label="Trend chart"></canvas></div>
-    <div class="legend" aria-hidden="true">
-      <span><i style="background:color-mix(in srgb, var(--amber) 35%, transparent)"></i>Alert zone</span>
-      <span><i style="background:color-mix(in srgb, var(--tomato) 35%, transparent)"></i>Critical zone</span>
-    </div>
-  </section>
+      <div class="live" id="live" role="status"><span class="dot"></span><span id="liveText">Connecting to the
+          node…</span></div>
+    </header>
 
-  <section class="panel" aria-labelledby="logTitle">
-    <div class="panel-head">
-      <div>
-        <h2 id="logTitle">Status changes</h2>
-        <p>Every time the node's grade changed, newest first.</p>
+    <div class="notice" id="notice" hidden></div>
+
+    <section class="overview" aria-label="Current conditions">
+      <article class="verdict" id="verdict" data-status="">
+        <div>
+          <div class="verdict-word" id="verdictWord">Waiting</div>
+          <div class="verdict-since num" id="verdictSince"></div>
+        </div>
+        <div class="verdict-risk" id="verdictRisk">No reading yet</div>
+        <div class="verdict-why" id="verdictWhy">
+          <p>The first reading appears here as soon as the field node publishes.</p>
+        </div>
+        <div class="verdict-action" id="verdictAction"></div>
+      </article>
+
+      <div class="gauges" id="gauges" aria-label="Readings against disease thresholds"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="trendTitle">
+      <div class="panel-head">
+        <div>
+          <h2 id="trendTitle">Recent trend</h2>
+          <p id="trendNote">Shaded bands are the alert and critical zones.</p>
+        </div>
+        <div class="tabs" role="tablist" id="tabs" aria-label="Parameter"></div>
       </div>
-      <button class="ghost" id="exportBtn" type="button">Download readings (CSV)</button>
-    </div>
-    <ol class="log" id="log"><li><span class="empty">No status changes yet.</span></li></ol>
-  </section>
+      <div class="chart-wrap"><canvas id="chart" aria-label="Trend chart"></canvas></div>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:color-mix(in srgb, var(--amber) 35%, transparent)"></i>Alert zone</span>
+        <span><i style="background:color-mix(in srgb, var(--tomato) 35%, transparent)"></i>Critical zone</span>
+      </div>
+    </section>
 
-  <p class="foot">Thresholds follow Table 3 of the TomatoGuard manuscript. Light is only graded between 06:00 and 18:00.</p>
-</div>
+    <section class="panel" aria-labelledby="logTitle">
+      <div class="panel-head">
+        <div>
+          <h2 id="logTitle">Status changes</h2>
+          <p>Every time the node's grade changed, newest first.</p>
+        </div>
+        <button class="ghost" id="exportBtn" type="button">Download readings (CSV)</button>
+      </div>
+      <ol class="log" id="log">
+        <li><span class="empty">No status changes yet.</span></li>
+      </ol>
+    </section>
 
-<script>
-"use strict";
-// --------------------------------------------------------------------------
-// Thresholds (manuscript Table 3). Zones run left to right along each gauge.
-// --------------------------------------------------------------------------
-const PARAMS = [
-  { key: "temperature", short: "Temperature", unit: "°C", digits: 1, min: 0, max: 45,
-    zones: [[0, 10, "crit"], [10, 15, "alert"], [15, 22, "ok"], [22, 28, "opt"], [28, 32, "ok"], [32, 35, "alert"], [35, 45, "crit"]],
-    ticks: [10, 15, 22, 28, 32, 35] },
-  { key: "humidity", short: "Humidity", unit: "%", digits: 0, min: 0, max: 100,
-    zones: [[0, 40, "ok"], [40, 85, "opt"], [85, 90, "alert"], [90, 100, "crit"]],
-    ticks: [40, 85, 90] },
-  { key: "soil_moisture", short: "Soil moisture", tab: "Soil", unit: "%", digits: 0, min: 0, max: 100,
-    zones: [[0, 30, "crit"], [30, 35, "alert"], [35, 45, "ok"], [45, 55, "opt"], [55, 75, "ok"], [75, 85, "alert"], [85, 100, "crit"]],
-    ticks: [30, 35, 45, 55, 75, 85] },
-  { key: "light", short: "Light", unit: "lux", digits: 0, min: 0, max: 80000, sqrt: true,
-    zones: [[0, 2000, "crit"], [2000, 5000, "alert"], [5000, 8000, "ok"], [8000, 70000, "opt"], [70000, 80000, "ok"]],
-    ticks: [2000, 5000, 8000, 70000], daytimeOnly: true },
-];
+    <p class="foot">Thresholds follow Table 3 of the TomatoGuard manuscript. Light is only graded between 06:00 and
+      18:00.</p>
+  </div>
 
-// Plain-language explanations for the risks the firmware can report.
-const RISKS = [
-  { match: /late\s*blight/i, name: "Late blight",
-    why: "Cool, saturated air lets late blight spores germinate on wet leaves.",
-    act: "Check lower leaves for dark, water-soaked patches and improve airflow around the plants." },
-  { match: /leaf\s*mold|leaf\s*mould/i, name: "Leaf mold",
-    why: "Humidity above 85% for long periods favours leaf mold.",
-    act: "Ventilate and avoid wetting the foliage; look for yellow spots on the upper leaf surface." },
-  { match: /bacterial\s*spot/i, name: "Bacterial spot",
-    why: "Warm, humid conditions help bacterial spot spread between leaves.",
-    act: "Avoid overhead watering and handling wet plants; look for small dark spots with yellow halos." },
-  { match: /spider\s*mite/i, name: "Spider mites",
-    why: "Hot, dry air favours spider mite outbreaks.",
-    act: "Check leaf undersides for fine webbing and speckling; raise humidity or shade the plants." },
-  { match: /root\s*rot|waterlog/i, name: "Root rot",
-    why: "Waterlogged soil starves the roots of oxygen and invites root rot.",
-    act: "Stop watering until the soil drains and check that the pot or bed drains freely." },
-  { match: /water\s*stress|root\s*damage/i, name: "Water stress",
-    why: "Dry soil stresses the roots and weakens the plant's defences.",
-    act: "Water the plants and check the soil probe is still firmly in the soil." },
-  { match: /low\s*light|growth\s*stress/i, name: "Low-light stress",
-    why: "Too little daylight slows growth and weakens resistance to disease.",
-    act: "Move potted plants to a brighter spot or remove shading." },
-];
-const STATUS_WORD = { NORMAL: "Normal", AT_RISK: "At risk", CRITICAL: "Critical" };
-const STALE_AFTER_MS = 60000;   // the node sends roughly every 10 s; a minute of silence means offline
-const POLL_MS = 3000;
-
-const $ = (id) => document.getElementById(id);
-const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-const fmt = (v, d) => (v === undefined || v === null || Number.isNaN(+v)) ? "–"
-  : (+v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
-
-let latest = null, lastTimestamp = null, lastChangeAt = 0, series = null, current = "humidity", chart = null;
-const seenTransitions = [];   // fallback log when /api/series has no status history
-
-// --------------------------------------------------------------------------
-// Helpers
-// --------------------------------------------------------------------------
-function isDaytime(r) {
-  if (r && typeof r.day === "boolean") return r.day;
-  const h = new Date().getHours();
-  return h >= 6 && h < 18;
-}
-function paramState(p, v, r) {
-  if (v === undefined || v === null || Number.isNaN(+v)) return "none";
-  if (p.daytimeOnly && !isDaytime(r)) return "night";
-  const z = p.zones.find(([a, b]) => v >= a && v < b) || (v >= p.max ? p.zones[p.zones.length - 1] : p.zones[0]);
-  return z[2] === "opt" ? "ok" : z[2];
-}
-const STATE_TEXT = { ok: "Within range", alert: "Alert", crit: "Critical", night: "Night: not graded", none: "No data" };
-function pos(p, v) {
-  const c = Math.min(Math.max(v, p.min), p.max);
-  const f = p.sqrt ? Math.sqrt((c - p.min) / (p.max - p.min)) : (c - p.min) / (p.max - p.min);
-  return f * 100;
-}
-function risksOf(text) {
-  if (!text || /^none$/i.test(String(text).trim())) return [];
-  return String(text).split(/[,;]+/).map((t) => t.trim()).filter(Boolean)
-    .map((t) => RISKS.find((k) => k.match.test(t)) || { name: t, why: "", act: "" });
-}
-function breaches(r) {
-  const out = [];
-  for (const p of PARAMS) {
-    const v = +r[p.key];
-    const s = paramState(p, v, r);
-    if (s !== "alert" && s !== "crit") continue;
-    const zone = p.zones.find(([a, b]) => v >= a && v < b) || [p.max, p.max];
-    const above = zone[0] >= (p.zones.find((z) => z[2] === "opt") || [0, 0])[1];
-    const line = above ? zone[0] : zone[1];
-    out.push(`${p.short} is ${fmt(v, p.digits)} ${p.unit}, ${above ? "above" : "below"} the ${fmt(line, 0)} ${p.unit} ${s === "crit" ? "critical" : "alert"} line.`);
-  }
-  return out;
-}
-function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
-
-// --------------------------------------------------------------------------
-// Rendering
-// --------------------------------------------------------------------------
-function buildGauges() {
-  const host = $("gauges");
-  for (const p of PARAMS) {
-    const g = el("div", "gauge"); g.id = "g-" + p.key;
-    const name = el("div", "gauge-name");
-    name.append(el("div", "label", p.short));
-    const val = el("div", "value num"); val.append(el("span", "v", "–"), el("span", "unit", p.unit)); name.append(val);
-    const st = el("div", "gauge-state", "No data"); st.dataset.s = "none"; name.append(st);
-    const track = el("div", "track");
-    const zones = el("div", "zones");
-    for (const [a, b, kind] of p.zones) { const z = el("span", "z-" + kind); z.style.width = (pos(p, b) - pos(p, a)) + "%"; zones.append(z); }
-    const marker = el("div", "marker"); marker.style.left = "0%"; marker.hidden = true;
-    track.append(zones, marker);
-    const ticks = el("div", "ticks num");
-    for (const t of p.ticks) { const s = el("span", "", t >= 1000 ? (t / 1000) + "k" : String(t)); s.style.left = pos(p, t) + "%"; ticks.append(s); }
-    g.append(name, track, ticks);
-    host.append(g);
-  }
-}
-
-function renderLatest(r) {
-  for (const p of PARAMS) {
-    const g = $("g-" + p.key), v = r[p.key];
-    g.querySelector(".v").textContent = fmt(v, p.digits);
-    const s = paramState(p, +v, r);
-    const st = g.querySelector(".gauge-state"); st.dataset.s = s; st.textContent = STATE_TEXT[s];
-    const m = g.querySelector(".marker");
-    if (v === undefined || v === null) { m.hidden = true; continue; }
-    m.hidden = false; m.style.left = pos(p, +v) + "%";
-    g.setAttribute("aria-label", `${p.short} ${fmt(v, p.digits)} ${p.unit}, ${STATE_TEXT[s]}`);
-  }
-
-  const status = STATUS_WORD[r.status] ? r.status : "";
-  const v = $("verdict"); v.dataset.status = status;
-  $("verdictWord").textContent = STATUS_WORD[status] || "Unknown";
-  const risks = risksOf(r.disease_risk);
-  $("verdictRisk").textContent = risks.length
-    ? risks.map((k, i) => (i ? k.name.toLowerCase() : k.name)).join(" and ") + " risk"
-    : "No disease risk detected";
-
-  const why = $("verdictWhy"); why.replaceChildren();
-  const lines = breaches(r);
-  risks.forEach((k) => k.why && lines.push(k.why));
-  if (!lines.length) lines.push("All four readings are inside their safe ranges.");
-  lines.forEach((t) => why.append(el("p", "", t)));
-
-  const act = $("verdictAction"); act.replaceChildren();
-  const todo = risks.map((k) => k.act).filter(Boolean);
-  if (todo.length) { act.append(el("strong", "", "What to check: ")); act.append(document.createTextNode(todo.join(" "))); }
-  else act.append(document.createTextNode(status === "NORMAL" ? "Nothing to do. The node will flag the next change." : ""));
-}
-
-function renderLive() {
-  const live = $("live");
-  if (!latest) { live.className = "live"; $("liveText").textContent = "Waiting for the first reading"; return; }
-  const age = Date.now() - lastChangeAt;
-  const device = latest.device || "esp32_plot01";
-  live.replaceChildren(el("span", "dot"));
-  const t = el("span"); t.id = "liveText";
-  if (age > STALE_AFTER_MS) {
-    live.className = "live off";
-    t.append(el("strong", "", device), document.createTextNode(` has sent nothing for ${Math.round(age / 60000) || 1} min (last reading ${latest.timestamp || "unknown"})`));
-  } else {
-    live.className = "live on";
-    t.append(el("strong", "", device), document.createTextNode(` is live, last reading ${Math.max(0, Math.round(age / 1000))} s ago`));
-  }
-  live.append(t);
-}
-
-function buildTabs() {
-  const tabs = $("tabs");
-  for (const p of PARAMS) {
-    const b = el("button", "", p.tab || p.short); b.type = "button"; b.setAttribute("role", "tab");
-    b.dataset.key = p.key; b.setAttribute("aria-selected", String(p.key === current));
-    b.addEventListener("click", () => { current = p.key; tabs.querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", String(x === b))); drawChart(); });
-    tabs.append(b);
-  }
-}
-
-// Draw the alert/critical zones behind the line.
-const zonePlugin = {
-  id: "zones",
-  beforeDatasetsDraw(c) {
-    const p = PARAMS.find((x) => x.key === current);
-    const { ctx, chartArea: a, scales: { y } } = c;
-    ctx.save();
-    for (const [lo, hi, kind] of p.zones) {
-      if (kind !== "alert" && kind !== "crit") continue;
-      const top = y.getPixelForValue(Math.min(hi, y.max)), bottom = y.getPixelForValue(Math.max(lo, y.min));
-      if (bottom <= a.top || top >= a.bottom || lo >= y.max || hi <= y.min) continue;
-      ctx.fillStyle = kind === "crit" ? "rgba(194,53,43,0.13)" : "rgba(169,105,15,0.14)";
-      ctx.fillRect(a.left, Math.max(top, a.top), a.right - a.left, Math.min(bottom, a.bottom) - Math.max(top, a.top));
-    }
-    ctx.restore();
-  },
-};
-
-function drawChart() {
-  const p = PARAMS.find((x) => x.key === current);
-  const labels = series ? series.labels : [];
-  const data = series ? (series[p.key] || []).map((v) => (v === null || v === undefined ? null : +v)) : [];
-  const vals = data.filter((v) => v !== null);
-  const lo = vals.length ? Math.min(...vals) : p.min, hi = vals.length ? Math.max(...vals) : p.max;
-  const pad = Math.max((hi - lo) * 0.25, p.key === "light" ? 2000 : 3);
-  const grid = css("--line"), ink = css("--muted");
-  const cfg = {
-    type: "line",
-    data: { labels, datasets: [{ label: `${p.short} (${p.unit})`, data, borderColor: css("--ink"), borderWidth: 2, pointRadius: data.length < 40 ? 2 : 0, tension: 0.25, spanGaps: true }] },
-    options: {
-      animation: false, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (i) => `${p.short}: ${fmt(i.parsed.y, p.digits)} ${p.unit}` } } },
-      scales: {
-        x: { ticks: { color: ink, maxTicksLimit: window.innerWidth < 600 ? 3 : 7, maxRotation: 0 }, grid: { display: false } },
-        y: { min: Math.max(p.min, Math.floor(lo - pad)), max: Math.min(p.max, Math.ceil(hi + pad)), ticks: { color: ink }, grid: { color: grid },
-             title: { display: true, text: p.unit, color: ink } },
+  <script>
+    "use strict";
+    // --------------------------------------------------------------------------
+    // Thresholds (manuscript Table 3). Zones run left to right along each gauge.
+    // --------------------------------------------------------------------------
+    const PARAMS = [
+      {
+        key: "temperature", short: "Temperature", unit: "°C", digits: 1, min: 0, max: 45,
+        zones: [[0, 10, "crit"], [10, 15, "alert"], [15, 22, "ok"], [22, 28, "opt"], [28, 32, "ok"], [32, 35, "alert"], [35, 45, "crit"]],
+        ticks: [10, 15, 22, 28, 32, 35]
       },
-    },
-    plugins: [zonePlugin],
-  };
-  if (chart) { chart.destroy(); }
-  chart = new Chart($("chart"), cfg);
-  $("trendNote").textContent = labels.length
-    ? `${labels.length} readings held on the Raspberry Pi, from ${labels[0]} to ${labels[labels.length - 1]}. Shaded bands are the alert and critical zones.`
-    : "No readings yet. Shaded bands are the alert and critical zones.";
-}
+      {
+        key: "humidity", short: "Humidity", unit: "%", digits: 0, min: 0, max: 100,
+        zones: [[0, 40, "ok"], [40, 85, "opt"], [85, 90, "alert"], [90, 100, "crit"]],
+        ticks: [40, 85, 90]
+      },
+      {
+        key: "soil_moisture", short: "Soil moisture", tab: "Soil", unit: "%", digits: 0, min: 0, max: 100,
+        zones: [[0, 30, "crit"], [30, 35, "alert"], [35, 45, "ok"], [45, 55, "opt"], [55, 75, "ok"], [75, 85, "alert"], [85, 100, "crit"]],
+        ticks: [30, 35, 45, 55, 75, 85]
+      },
+      {
+        key: "light", short: "Light", unit: "lux", digits: 0, min: 0, max: 80000, sqrt: true,
+        zones: [[0, 2000, "crit"], [2000, 5000, "alert"], [5000, 8000, "ok"], [8000, 70000, "opt"], [70000, 80000, "ok"]],
+        ticks: [2000, 5000, 8000, 70000], daytimeOnly: true
+      },
+    ];
 
-function transitions() {
-  // Prefer the server's history if it includes status; otherwise use what this page has seen.
-  if (series && Array.isArray(series.status) && series.status.length === series.labels.length) {
-    const out = [];
-    for (let i = 0; i < series.status.length; i++) {
-      if (i === 0 || series.status[i] !== series.status[i - 1]) {
-        out.push({ time: (series.timestamps || series.labels)[i], from: i ? series.status[i - 1] : null, to: series.status[i],
-                   risk: (series.disease_risk || [])[i] });
+    // Plain-language explanations for the risks the firmware can report.
+    const RISKS = [
+      {
+        match: /late\s*blight/i, name: "Late blight",
+        why: "Cool, saturated air lets late blight spores germinate on wet leaves.",
+        act: "Check lower leaves for dark, water-soaked patches and improve airflow around the plants."
+      },
+      {
+        match: /leaf\s*mold|leaf\s*mould/i, name: "Leaf mold",
+        why: "Humidity above 85% for long periods favours leaf mold.",
+        act: "Ventilate and avoid wetting the foliage; look for yellow spots on the upper leaf surface."
+      },
+      {
+        match: /bacterial\s*spot/i, name: "Bacterial spot",
+        why: "Warm, humid conditions help bacterial spot spread between leaves.",
+        act: "Avoid overhead watering and handling wet plants; look for small dark spots with yellow halos."
+      },
+      {
+        match: /spider\s*mite/i, name: "Spider mites",
+        why: "Hot, dry air favours spider mite outbreaks.",
+        act: "Check leaf undersides for fine webbing and speckling; raise humidity or shade the plants."
+      },
+      {
+        match: /root\s*rot|waterlog/i, name: "Root rot",
+        why: "Waterlogged soil starves the roots of oxygen and invites root rot.",
+        act: "Stop watering until the soil drains and check that the pot or bed drains freely."
+      },
+      {
+        match: /water\s*stress|root\s*damage/i, name: "Water stress",
+        why: "Dry soil stresses the roots and weakens the plant's defences.",
+        act: "Water the plants and check the soil probe is still firmly in the soil."
+      },
+      {
+        match: /low\s*light|growth\s*stress/i, name: "Low-light stress",
+        why: "Too little daylight slows growth and weakens resistance to disease.",
+        act: "Move potted plants to a brighter spot or remove shading."
+      },
+    ];
+    const STATUS_WORD = { NORMAL: "Normal", AT_RISK: "At risk", CRITICAL: "Critical" };
+    const STALE_AFTER_MS = 60000;   // the node sends roughly every 10 s; a minute of silence means offline
+    const POLL_MS = 3000;
+
+    const $ = (id) => document.getElementById(id);
+    const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const fmt = (v, d) => (v === undefined || v === null || Number.isNaN(+v)) ? "–"
+      : (+v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    let latest = null, lastTimestamp = null, lastChangeAt = 0, series = null, current = "humidity", chart = null;
+    const seenTransitions = [];   // fallback log when /api/series has no status history
+
+    // --------------------------------------------------------------------------
+    // Helpers
+    // --------------------------------------------------------------------------
+    function isDaytime(r) {
+      if (r && typeof r.day === "boolean") return r.day;
+      const h = new Date().getHours();
+      return h >= 6 && h < 18;
+    }
+    function paramState(p, v, r) {
+      if (v === undefined || v === null || Number.isNaN(+v)) return "none";
+      if (p.daytimeOnly && !isDaytime(r)) return "night";
+      const z = p.zones.find(([a, b]) => v >= a && v < b) || (v >= p.max ? p.zones[p.zones.length - 1] : p.zones[0]);
+      return z[2] === "opt" ? "ok" : z[2];
+    }
+    const STATE_TEXT = { ok: "Within range", alert: "Alert", crit: "Critical", night: "Night: not graded", none: "No data" };
+    function pos(p, v) {
+      const c = Math.min(Math.max(v, p.min), p.max);
+      const f = p.sqrt ? Math.sqrt((c - p.min) / (p.max - p.min)) : (c - p.min) / (p.max - p.min);
+      return f * 100;
+    }
+    function risksOf(text) {
+      if (!text || /^none$/i.test(String(text).trim())) return [];
+      return String(text).split(/[,;]+/).map((t) => t.trim()).filter(Boolean)
+        .map((t) => RISKS.find((k) => k.match.test(t)) || { name: t, why: "", act: "" });
+    }
+    function breaches(r) {
+      const out = [];
+      for (const p of PARAMS) {
+        const v = +r[p.key];
+        const s = paramState(p, v, r);
+        if (s !== "alert" && s !== "crit") continue;
+        const zone = p.zones.find(([a, b]) => v >= a && v < b) || [p.max, p.max];
+        const above = zone[0] >= (p.zones.find((z) => z[2] === "opt") || [0, 0])[1];
+        const line = above ? zone[0] : zone[1];
+        out.push(`${p.short} is ${fmt(v, p.digits)} ${p.unit}, ${above ? "above" : "below"} the ${fmt(line, 0)} ${p.unit} ${s === "crit" ? "critical" : "alert"} line.`);
+      }
+      return out;
+    }
+    function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+
+    // --------------------------------------------------------------------------
+    // Rendering
+    // --------------------------------------------------------------------------
+    function buildGauges() {
+      const host = $("gauges");
+      for (const p of PARAMS) {
+        const g = el("div", "gauge"); g.id = "g-" + p.key;
+        const name = el("div", "gauge-name");
+        name.append(el("div", "label", p.short));
+        const val = el("div", "value num"); val.append(el("span", "v", "–"), el("span", "unit", p.unit)); name.append(val);
+        const st = el("div", "gauge-state", "No data"); st.dataset.s = "none"; name.append(st);
+        const track = el("div", "track");
+        const zones = el("div", "zones");
+        for (const [a, b, kind] of p.zones) { const z = el("span", "z-" + kind); z.style.width = (pos(p, b) - pos(p, a)) + "%"; zones.append(z); }
+        const marker = el("div", "marker"); marker.style.left = "0%"; marker.hidden = true;
+        track.append(zones, marker);
+        const ticks = el("div", "ticks num");
+        for (const t of p.ticks) { const s = el("span", "", t >= 1000 ? (t / 1000) + "k" : String(t)); s.style.left = pos(p, t) + "%"; ticks.append(s); }
+        g.append(name, track, ticks);
+        host.append(g);
       }
     }
-    return out.slice(1).reverse();   // the first point is where the window starts, not a change
-  }
-  return [...seenTransitions].reverse();
-}
 
-function renderLog() {
-  const list = $("log"), items = transitions();
-  list.replaceChildren();
-  if (!items.length) { const li = el("li"); li.append(el("span", "empty", "No status changes yet. Changes appear here as soon as the node reports one.")); list.append(li); return; }
-  for (const t of items.slice(0, 50)) {
-    const li = el("li");
-    li.append(el("time", "num", t.time || ""));
-    li.append(el("span", `pill ${t.to}`, STATUS_WORD[t.to] || t.to));
-    const risks = risksOf(t.risk);
-    const what = risks.length ? risks.map((k) => k.name).join(", ") : (t.to === "NORMAL" ? "Conditions back in range" : "No named risk");
-    li.append(el("span", "what", t.from ? `${what} (was ${STATUS_WORD[t.from] || t.from})` : what));
-    list.append(li);
-  }
-}
+    function renderLatest(r) {
+      for (const p of PARAMS) {
+        const g = $("g-" + p.key), v = r[p.key];
+        g.querySelector(".v").textContent = fmt(v, p.digits);
+        const s = paramState(p, +v, r);
+        const st = g.querySelector(".gauge-state"); st.dataset.s = s; st.textContent = STATE_TEXT[s];
+        const m = g.querySelector(".marker");
+        if (v === undefined || v === null) { m.hidden = true; continue; }
+        m.hidden = false; m.style.left = pos(p, +v) + "%";
+        g.setAttribute("aria-label", `${p.short} ${fmt(v, p.digits)} ${p.unit}, ${STATE_TEXT[s]}`);
+      }
 
-function exportCsv() {
-  if (!series || !series.labels.length) { showNotice("There are no readings to download yet."); return; }
-  const cols = ["time", ...PARAMS.map((p) => p.key)];
-  const hasStatus = Array.isArray(series.status);
-  if (hasStatus) cols.push("status", "disease_risk");
-  const rows = series.labels.map((lab, i) => {
-    const r = [(series.timestamps || series.labels)[i], ...PARAMS.map((p) => (series[p.key] || [])[i])];
-    if (hasStatus) r.push(series.status[i], (series.disease_risk || [])[i]);
-    return r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",");
-  });
-  const blob = new Blob([[cols.join(","), ...rows].join("\n")], { type: "text/csv" });
-  const a = el("a"); a.href = URL.createObjectURL(blob); a.download = "tomatoguard_readings.csv";
-  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-}
+      const status = STATUS_WORD[r.status] ? r.status : "";
+      const v = $("verdict"); v.dataset.status = status;
+      $("verdictWord").textContent = STATUS_WORD[status] || "Unknown";
+      const risks = risksOf(r.disease_risk);
+      $("verdictRisk").textContent = risks.length
+        ? risks.map((k, i) => (i ? k.name.toLowerCase() : k.name)).join(" and ") + " risk"
+        : "No disease risk detected";
 
-function renderSince() {
-  const t = transitions().find((x) => x.to === (latest && latest.status));
-  const when = t && t.time ? String(t.time).slice(-8, -3) : "";
-  $("verdictSince").textContent = when ? `Since ${when}` : "";
-}
+      const why = $("verdictWhy"); why.replaceChildren();
+      const lines = breaches(r);
+      risks.forEach((k) => k.why && lines.push(k.why));
+      if (!lines.length) lines.push("All four readings are inside their safe ranges.");
+      lines.forEach((t) => why.append(el("p", "", t)));
 
-function showNotice(text) { const n = $("notice"); n.textContent = text; n.hidden = !text; }
+      const act = $("verdictAction"); act.replaceChildren();
+      const todo = risks.map((k) => k.act).filter(Boolean);
+      if (todo.length) { act.append(el("strong", "", "What to check: ")); act.append(document.createTextNode(todo.join(" "))); }
+      else act.append(document.createTextNode(status === "NORMAL" ? "Nothing to do. The node will flag the next change." : ""));
+    }
 
-// --------------------------------------------------------------------------
-// Polling
-// --------------------------------------------------------------------------
-async function tick() {
-  try {
-    const r = await (await fetch("/api/latest", { cache: "no-store" })).json();
-    showNotice("");
-    if (r && r.status) {
-      if (r.timestamp !== lastTimestamp) {
-        if (latest && latest.status !== r.status) seenTransitions.push({ time: r.timestamp, from: latest.status, to: r.status, risk: r.disease_risk });
-        lastTimestamp = r.timestamp; lastChangeAt = Date.now();
-        latest = r;
-        renderLatest(r);
-        series = await (await fetch("/api/series", { cache: "no-store" })).json();
-        drawChart();
-        renderLog();
-        renderSince();
+    function renderLive() {
+      const live = $("live");
+      if (!latest) { live.className = "live"; $("liveText").textContent = "Waiting for the first reading"; return; }
+      const age = Date.now() - lastChangeAt;
+      const device = latest.device || "esp32_plot01";
+      live.replaceChildren(el("span", "dot"));
+      const t = el("span"); t.id = "liveText";
+      if (age > STALE_AFTER_MS) {
+        live.className = "live off";
+        t.append(el("strong", "", device), document.createTextNode(` has sent nothing for ${Math.round(age / 60000) || 1} min (last reading ${latest.timestamp || "unknown"})`));
+      } else {
+        live.className = "live on";
+        t.append(el("strong", "", device), document.createTextNode(` is live, last reading ${Math.max(0, Math.round(age / 1000))} s ago`));
+      }
+      live.append(t);
+    }
+
+    function buildTabs() {
+      const tabs = $("tabs");
+      for (const p of PARAMS) {
+        const b = el("button", "", p.tab || p.short); b.type = "button"; b.setAttribute("role", "tab");
+        b.dataset.key = p.key; b.setAttribute("aria-selected", String(p.key === current));
+        b.addEventListener("click", () => { current = p.key; tabs.querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", String(x === b))); drawChart(); });
+        tabs.append(b);
       }
     }
-  } catch (e) {
-    showNotice("The dashboard cannot reach the Raspberry Pi. Check that the Pi is on and on the same network, then this page reconnects by itself.");
-  }
-  renderLive();
-}
 
-buildGauges();
-buildTabs();
-drawChart();
-$("exportBtn").addEventListener("click", exportCsv);
-tick();
-setInterval(tick, POLL_MS);
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawChart);
-</script>
+    // Draw the alert/critical zones behind the line.
+    const zonePlugin = {
+      id: "zones",
+      beforeDatasetsDraw(c) {
+        const p = PARAMS.find((x) => x.key === current);
+        const { ctx, chartArea: a, scales: { y } } = c;
+        ctx.save();
+        for (const [lo, hi, kind] of p.zones) {
+          if (kind !== "alert" && kind !== "crit") continue;
+          const top = y.getPixelForValue(Math.min(hi, y.max)), bottom = y.getPixelForValue(Math.max(lo, y.min));
+          if (bottom <= a.top || top >= a.bottom || lo >= y.max || hi <= y.min) continue;
+          ctx.fillStyle = kind === "crit" ? "rgba(194,53,43,0.13)" : "rgba(169,105,15,0.14)";
+          ctx.fillRect(a.left, Math.max(top, a.top), a.right - a.left, Math.min(bottom, a.bottom) - Math.max(top, a.top));
+        }
+        ctx.restore();
+      },
+    };
+
+    function drawChart() {
+      const p = PARAMS.find((x) => x.key === current);
+      const labels = series ? series.labels : [];
+      const data = series ? (series[p.key] || []).map((v) => (v === null || v === undefined ? null : +v)) : [];
+      const vals = data.filter((v) => v !== null);
+      const lo = vals.length ? Math.min(...vals) : p.min, hi = vals.length ? Math.max(...vals) : p.max;
+      const pad = Math.max((hi - lo) * 0.25, p.key === "light" ? 2000 : 3);
+      const grid = css("--line"), ink = css("--muted");
+      const cfg = {
+        type: "line",
+        data: { labels, datasets: [{ label: `${p.short} (${p.unit})`, data, borderColor: css("--ink"), borderWidth: 2, pointRadius: data.length < 40 ? 2 : 0, tension: 0.25, spanGaps: true }] },
+        options: {
+          animation: false, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (i) => `${p.short}: ${fmt(i.parsed.y, p.digits)} ${p.unit}` } } },
+          scales: {
+            x: { ticks: { color: ink, maxTicksLimit: window.innerWidth < 600 ? 3 : 7, maxRotation: 0 }, grid: { display: false } },
+            y: {
+              min: Math.max(p.min, Math.floor(lo - pad)), max: Math.min(p.max, Math.ceil(hi + pad)), ticks: { color: ink }, grid: { color: grid },
+              title: { display: true, text: p.unit, color: ink }
+            },
+          },
+        },
+        plugins: [zonePlugin],
+      };
+      if (chart) { chart.destroy(); }
+      chart = new Chart($("chart"), cfg);
+      $("trendNote").textContent = labels.length
+        ? `${labels.length} readings held on the Raspberry Pi, from ${labels[0]} to ${labels[labels.length - 1]}. Shaded bands are the alert and critical zones.`
+        : "No readings yet. Shaded bands are the alert and critical zones.";
+    }
+
+    function transitions() {
+      // Prefer the server's history if it includes status; otherwise use what this page has seen.
+      if (series && Array.isArray(series.status) && series.status.length === series.labels.length) {
+        const out = [];
+        for (let i = 0; i < series.status.length; i++) {
+          if (i === 0 || series.status[i] !== series.status[i - 1]) {
+            out.push({
+              time: (series.timestamps || series.labels)[i], from: i ? series.status[i - 1] : null, to: series.status[i],
+              risk: (series.disease_risk || [])[i]
+            });
+          }
+        }
+        return out.slice(1).reverse();   // the first point is where the window starts, not a change
+      }
+      return [...seenTransitions].reverse();
+    }
+
+    function renderLog() {
+      const list = $("log"), items = transitions();
+      list.replaceChildren();
+      if (!items.length) { const li = el("li"); li.append(el("span", "empty", "No status changes yet. Changes appear here as soon as the node reports one.")); list.append(li); return; }
+      for (const t of items.slice(0, 50)) {
+        const li = el("li");
+        li.append(el("time", "num", t.time || ""));
+        li.append(el("span", `pill ${t.to}`, STATUS_WORD[t.to] || t.to));
+        const risks = risksOf(t.risk);
+        const what = risks.length ? risks.map((k) => k.name).join(", ") : (t.to === "NORMAL" ? "Conditions back in range" : "No named risk");
+        li.append(el("span", "what", t.from ? `${what} (was ${STATUS_WORD[t.from] || t.from})` : what));
+        list.append(li);
+      }
+    }
+
+    function exportCsv() {
+      if (!series || !series.labels.length) { showNotice("There are no readings to download yet."); return; }
+      const cols = ["time", ...PARAMS.map((p) => p.key)];
+      const hasStatus = Array.isArray(series.status);
+      if (hasStatus) cols.push("status", "disease_risk");
+      const rows = series.labels.map((lab, i) => {
+        const r = [(series.timestamps || series.labels)[i], ...PARAMS.map((p) => (series[p.key] || [])[i])];
+        if (hasStatus) r.push(series.status[i], (series.disease_risk || [])[i]);
+        return r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",");
+      });
+      const blob = new Blob([[cols.join(","), ...rows].join("\n")], { type: "text/csv" });
+      const a = el("a"); a.href = URL.createObjectURL(blob); a.download = "tomatoguard_readings.csv";
+      document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+
+    function renderSince() {
+      const t = transitions().find((x) => x.to === (latest && latest.status));
+      const when = t && t.time ? String(t.time).slice(-8, -3) : "";
+      $("verdictSince").textContent = when ? `Since ${when}` : "";
+    }
+
+    function showNotice(text) { const n = $("notice"); n.textContent = text; n.hidden = !text; }
+
+    // --------------------------------------------------------------------------
+    // Polling
+    // --------------------------------------------------------------------------
+    async function tick() {
+      try {
+        const r = await (await fetch("/api/latest", { cache: "no-store" })).json();
+        showNotice("");
+        if (r && r.status) {
+          if (r.timestamp !== lastTimestamp) {
+            if (latest && latest.status !== r.status) seenTransitions.push({ time: r.timestamp, from: latest.status, to: r.status, risk: r.disease_risk });
+            lastTimestamp = r.timestamp; lastChangeAt = Date.now();
+            latest = r;
+            renderLatest(r);
+            series = await (await fetch("/api/series", { cache: "no-store" })).json();
+            drawChart();
+            renderLog();
+            renderSince();
+          }
+        }
+      } catch (e) {
+        showNotice("The dashboard cannot reach the Raspberry Pi. Check that the Pi is on and on the same network, then this page reconnects by itself.");
+      }
+      renderLive();
+    }
+
+    buildGauges();
+    buildTabs();
+    drawChart();
+    $("exportBtn").addEventListener("click", exportCsv);
+    tick();
+    setInterval(tick, POLL_MS);
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawChart);
+  </script>
 </body>
+
 </html>

@@ -5,13 +5,12 @@
  * Edge features: PUBLISH_ALL flag, on-change + heartbeat publishing,
  * offline RAM buffer, topic hierarchy agri/<region>/<user>/<device>/status.
  *
- * NOTE: broker is anonymous for now, so there is NO MQTT username/password.
- * When you enable broker auth later (for the paper's security section),
- * add MQTT_USER/MQTT_PASS back and use mqtt.connect(DEVICE_ID, MQTT_USER, MQTT_PASS).
+ * LCD now rotates THREE screens every 2.5 s:
+ *   1) sensor values (T/H/S/L)
+ *   2) status + disease risk
+ *   3) connection status  -> WiFi OK/DOWN + signal, MQTT OK/DOWN + buffered count
  *
- * STILL TO SET before this connects:
- *   - WIFI_SSID / WIFI_PASS : a network the ESP32 can actually join
- *   - MQTT_HOST             : the Pi's current IP on that same network
+ * NOTE: broker is anonymous for now, so there is NO MQTT username/password.
  *
  * LIBRARIES: DHT sensor library, LiquidCrystal_I2C, PubSubClient, ArduinoJson
  * ============================================================
@@ -24,9 +23,9 @@
 #include <PubSubClient.h>
 
 // ---------- EDIT THESE ----------
-const char *WIFI_SSID = "WTIoT_24G_1";
-const char *WIFI_PASS = "tcictait";
-const char *MQTT_HOST = "192.168.1.104"; // Raspberry Pi IP
+const char *WIFI_SSID = "iotcloud";   // <-- verify this EXACTLY matches the Wi-Fi scan
+const char *WIFI_PASS = "tc203@ait";
+const char *MQTT_HOST = "192.168.0.137"; // Raspberry Pi IP
 const int MQTT_PORT = 1883;
 
 // ---- identity -> topic hierarchy agri/<region>/<user>/<device>/status ----
@@ -69,7 +68,8 @@ int SOIL_RAW_AIR = 3616, SOIL_RAW_WATER = 254;
 // ---------- timing / state ----------
 const unsigned long LCD_INTERVAL = 2500, LED_INTERVAL = 500;
 unsigned long lastRead = 0, lastLcd = 0, lastLed = 0, lastPublish = 0;
-bool ledState = false, lcdScreenA = true;
+bool ledState = false;
+int lcdScreen = 0;                 // 0=sensors, 1=status, 2=connection
 char topicStatus[160];
 String lastStatusPublished = "";
 unsigned long msgCount = 0;
@@ -190,8 +190,9 @@ void identifyDiseaseRisk(float t, float h, float s, float l, String &sn, String 
 void updateDisplay()
 {
     lcd.clear();
-    if (lcdScreenA)
+    if (lcdScreen == 0)
     {
+        // --- Screen 1: sensor values ---
         lcd.setCursor(0, 0);
         lcd.print("T:");
         lcd.print(gTemp, 1);
@@ -204,14 +205,33 @@ void updateDisplay()
         lcd.print("% L:");
         lcd.print(gLight, 0);
     }
-    else
+    else if (lcdScreen == 1)
     {
+        // --- Screen 2: status + disease risk ---
         lcd.setCursor(0, 0);
         lcd.print(gStatus);
         lcd.setCursor(0, 1);
         lcd.print(gRiskShort.length() > 0 ? gRiskShort : String("No disease risk"));
     }
-    lcdScreenA = !lcdScreenA;
+    else
+    {
+        // --- Screen 3: connection status ---
+        lcd.setCursor(0, 0);
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            lcd.print("WiFi:OK ");
+            lcd.print(WiFi.RSSI());
+            lcd.print("dBm");
+        }
+        else
+        {
+            lcd.print("WiFi:DOWN");
+        }
+        lcd.setCursor(0, 1);
+        lcd.print(mqtt.connected() ? "MQTT:OK  buf:" : "MQTT:DOWN buf:");
+        lcd.print(bufCount);
+    }
+    lcdScreen = (lcdScreen + 1) % 3;   // rotate through the 3 screens
 }
 
 void startWiFiConnection()
