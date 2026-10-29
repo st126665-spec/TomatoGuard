@@ -23,9 +23,9 @@
 #include <PubSubClient.h>
 
 // ---------- EDIT THESE ----------
-const char *WIFI_SSID = "iotcloud";   // <-- verify this EXACTLY matches the Wi-Fi scan
-const char *WIFI_PASS = "tc203@ait";
-const char *MQTT_HOST = "192.168.0.137"; // Raspberry Pi IP
+const char *WIFI_SSID = "WTIoT_24G_1";   // <-- verify this EXACTLY matches the Wi-Fi scan
+const char *WIFI_PASS = "tcictait";
+const char *MQTT_HOST = "192.168.1.103"; // Raspberry Pi IP
 const int MQTT_PORT = 1883;
 
 // ---- identity -> topic hierarchy agri/<region>/<user>/<device>/status ----
