@@ -44,7 +44,7 @@ def log_csv(row):
 def post_reading(payload_bytes):
     req = urllib.request.Request(
         CLOUD_URL, data=payload_bytes,
-        headers={"Content-Type": "application/json", "X-Ingest-Key": INGEST_KEY},
+        headers={"Content-Type": "application/json", "X-Ingest-Key": INGEST_KEY, "User-Agent": "Mozilla/5.0 (compatible; TomatoGuard-Forwarder/1.0)"},
         method="POST")
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
