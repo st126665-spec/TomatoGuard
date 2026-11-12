@@ -868,7 +868,7 @@
       if (chart) { chart.destroy(); }
       chart = new Chart($("chart"), cfg);
       $("trendNote").textContent = labels.length
-        ? `${labels.length} readings held on the Raspberry Pi, from ${labels[0]} to ${labels[labels.length - 1]}. Shaded bands are the alert and critical zones.`
+        ? `${labels.length} readings held on the server, from ${labels[0]} to ${labels[labels.length - 1]}. Shaded bands are the alert and critical zones.`
         : "No readings yet. Shaded bands are the alert and critical zones.";
     }
 
@@ -947,7 +947,7 @@
           }
         }
       } catch (e) {
-        showNotice("The dashboard cannot reach the Raspberry Pi. Check that the Pi is on and on the same network, then this page reconnects by itself.");
+        showNotice("The dashboard cannot reach the TomatoGuard server. This page reconnects by itself when it is back.");
       }
       renderLive();
     }
