@@ -1,0 +1,69 @@
+===================================================================
+ TomatoGuard - Pi measurements    Fri 13 Nov 13:08:10 +07 2026
+ host=tomatoguard  model=Raspberry Pi 4 Model B Rev 1.1
+===================================================================
+
+### FACTS
+CPU cores (nproc): 4
+-- memory --
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       548Mi       2.1Gi        30Mi       1.1Gi       3.2Gi
+Swap:          2.0Gi          0B       2.0Gi
+-- disk --
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/mmcblk0p2   58G  8.6G   47G  16% /
+-- OS --
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+
+### 1) LATENCY  (100 requests to http://tomatoguard.iotcloud-lab.com/api/latest)
+  n=100  avg=562.9 ms  min=106.3 ms  max=1306.3 ms
+installing sysbench...
+
+### 2) sysbench CPU  (3 runs single-thread, 3 runs all-thread)
+-- CPU 1-thread run 1 --
+    events per second:  1464.14
+-- CPU 1-thread run 2 --
+    events per second:  1470.86
+-- CPU 1-thread run 3 --
+    events per second:  1470.57
+-- CPU 1 all-thread (4) run 1 --
+    events per second:  5865.56
+-- CPU 2 all-thread (4) run 2 --
+    events per second:  5875.56
+-- CPU 3 all-thread (4) run 3 --
+    events per second:  5879.91
+
+### 3) sysbench MEMORY  (3 runs)
+-- memory run 1 --
+10240.00 MiB transferred (1987.63 MiB/sec)
+-- memory run 2 --
+10240.00 MiB transferred (1999.71 MiB/sec)
+-- memory run 3 --
+10240.00 MiB transferred (1992.35 MiB/sec)
+
+### 4) dd DISK  (3 runs write + read)
+-- write run 1 --
+536870912 bytes (537 MB, 512 MiB) copied, 17.5418 s, 30.6 MB/s
+-- read  run 1 --
+536870912 bytes (537 MB, 512 MiB) copied, 11.8956 s, 45.1 MB/s
+-- write run 2 --
+536870912 bytes (537 MB, 512 MiB) copied, 20.0438 s, 26.8 MB/s
+-- read  run 2 --
+536870912 bytes (537 MB, 512 MiB) copied, 11.8389 s, 45.3 MB/s
+-- write run 3 --
+536870912 bytes (537 MB, 512 MiB) copied, 17.2554 s, 31.1 MB/s
+-- read  run 3 --
+536870912 bytes (537 MB, 512 MiB) copied, 11.8413 s, 45.3 MB/s
+
+### 5) iperf3 (optional)
+  IPERF_SERVER not set -> skipped.  To run: IPERF_SERVER=<laptop-ip> bash 1_pi_measure.sh
+
+### 6) LIVE RESOURCE USAGE (docker stats)
+CONTAINER ID   NAME           CPU %     MEM USAGE / LIMIT   MEM %     NET I/O           BLOCK I/O     PIDS
+ea54cd60381a   tg_dashboard   0.02%     0B / 0B             0.00%     1.85MB / 2.28MB   34.7MB / 0B   2
+3c7c5cc758d4   tg_mosquitto   0.02%     0B / 0B             0.00%     1.34MB / 967kB    0B / 0B       1
+ff7f3605c235   tg_influxdb    0.04%     0B / 0B             0.00%     1.8MB / 11.4MB    107MB / 0B    11
+
+===================================================================
+ DONE -> results_pi_20261113_130810.txt     (send this file to Liza)
+===================================================================
