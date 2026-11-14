@@ -1,0 +1,87 @@
+===================================================================
+ OUTAGE TEST: broker for 5 min    Sat 14 Nov 09:00:08 +07 2026
+ ESP32 on PUBLISH_ALL=false, forwarder (tg-forwarder) running.
+===================================================================
+ EXPECT: LCD 'MQTT:DOWN buf:' climbs ~12/min up to 60; flushes to 0 on restore.
+
+>>> MANUAL STEP (do it now): breathe on the DHT22 / wet the soil probe until the
+    LCD shows AT RISK, hold ~1 min, then let it return to NORMAL.
+    (press Enter once you've started)
+
+>>> CUTTING the broker link at Sat 14 Nov 09:01:25 +07 2026
+tg_mosquitto
+>>> link DOWN. Waiting 5 min.
+>>> IN THE LAST MINUTE: take a photo of the LCD showing buf:NN
+   05:00 remaining
+   04:30 remaining
+   04:00 remaining
+   03:30 remaining
+   03:00 remaining
+   02:30 remaining
+   02:00 remaining
+   01:30 remaining
+   01:00 remaining
+   00:30 remaining
+
+>>> restoring broker link at Sat 14 Nov 09:06:26 +07 2026 ...
+>>> link restored.
+
+>>> waiting 90s for reconnect / buffer flush ...
+
+### FORWARDER LOG (last 50 lines: FAILED during outage, 200 after)
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.8,"humidity":67.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.1,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.7,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.8,"humidity":66.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.5,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.5,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.5,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.7,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.9,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.9,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.7,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.9,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.1,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.1,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.8,"humidity":66.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.5,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.9,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.4,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.5,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.1,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.0,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.0,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.1,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.9,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.9,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.9,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.8,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.8,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.7,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":66.8,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.0,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.1,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.2,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.8,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.2,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.0,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.2,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.3,"soil_mois'
+Nov 14 08:54:20 tomatoguard python3[5178]: [fwd] 200 -> b'{"device":"esp32_plot01","temperature":26.9,"humidity":67.2,"soil_mois'
+
+===================================================================
+ DONE -> results_outage_broker_5min_20261114_090008.txt
+ 📷 Screenshot the dashboard's 'Status changes' list and note if the
+    AT RISK change you made is present. Send the file + photos to Liza.
+===================================================================
