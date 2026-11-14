@@ -1,0 +1,36 @@
+===================================================================
+ TomatoGuard - MQTT vs HTTP capture    Sat 14 Nov 08:39:27 +07 2026
+===================================================================
+!! ESP32 must be on PUBLISH_ALL = true (every 5 s) for this to be meaningful !!
+
+installing tcpdump...
+installing tshark...
+>>> capturing 10 minutes (port 1883 = MQTT in, port 80 = HTTP out)...
+   10 min remaining
+   9 min remaining
+   8 min remaining
+   7 min remaining
+   6 min remaining
+   5 min remaining
+   4 min remaining
+   3 min remaining
+   2 min remaining
+   1 min remaining
+
+### MQTT  (port 1883)
+File name:           /tmp/mqtt.pcap
+Number of packets:   2,544
+Data size:           360 kB
+
+### HTTP  (port 80)
+File name:           /tmp/http.pcap
+Number of packets:   1,502
+Data size:           242 kB
+
+### COMPARISON HINT
+  bytes-per-reading = (total bytes) / (number of readings in 10 min = ~120 at 5s).
+  HTTP will be much larger per reading (headers) -> that's the overhead result.
+
+===================================================================
+ DONE -> results_capture_20261114_083927.txt   (send to Liza).  Now flash the ESP32 back to PUBLISH_ALL = false.
+===================================================================
